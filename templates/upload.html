@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="form-container">
+    <h2>{{ t.upload_photo }}</h2>
+    <form method="POST" action="{{ url_for('upload') }}" enctype="multipart/form-data" class="custom-form">
+        <div class="form-group">
+            <label for="photo">{{ t.select_image }}</label>
+            <!-- enctype="multipart/form-data" разрешает загрузку файлов -->
+            <input type="file" id="photo" name="photo" accept="image/*" required>
+        </div>
+        <div class="form-group">
+            <label for="title">{{ t.title }}</label>
+            <input type="text" id="title" name="title" required placeholder="{{ t.title_placeholder }}">
+        </div>
+        <div class="form-group">
+            <label for="description">{{ t.description }}</label>
+            <textarea id="description" name="description" rows="3" placeholder="{{ t.description_placeholder }}"></textarea>
+        </div>
+        <div class="form-group">
+            <label for="lens_id">{{ t.lens_used }}</label>
+            <!-- Динамически заполняемый выпадающий список -->
+            <select id="lens_id" name="lens_id" required>
+                <option value="" disabled selected>{{ t.select_lens }}</option>
+                {% for lens in lenses %}
+                    <option value="{{ lens.id }}">{{ lens.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <button type="submit" class="btn btn-primary w-100">{{ t.upload_btn }}</button>
+    </form>
+</div>
+{% endblock %}

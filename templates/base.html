@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bator Dugarov | Photography</title>
+    <!-- Использование системных шрифтов для производительности, с Inter в качестве современного запасного варианта -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <header>
+        <div class="header-container">
+            <h1><a href="{{ url_for('index') }}" class="brand">{{ t.brand }}</a></h1>
+            <nav>
+                <ul class="nav-links">
+                    <li><a href="{{ url_for('index') }}">{{ t.all_photos }}</a></li>
+                    <!-- Динамическая генерация фильтров по объективу -->
+                    {% for lens in all_lenses %}
+                    <li><a href="{{ url_for('filter_by_lens', lens_id=lens.id) }}">{{ lens.name }}</a></li>
+                    {% endfor %}
+                    
+                    <!-- Переключатель языка -->
+                    <li class="lang-toggle">
+                        <a href="{{ url_for('set_language', lang='ru') }}" class="{% if current_lang == 'ru' %}active-lang{% endif %}">RU</a> | 
+                        <a href="{{ url_for('set_language', lang='en') }}" class="{% if current_lang == 'en' %}active-lang{% endif %}">EN</a>
+                    </li>
+                    
+                    <!-- Панель управления администратора -->
+                    {% if session.get('logged_in') %}
+                        <li><a href="{{ url_for('upload') }}" class="btn btn-outline">{{ t.upload }}</a></li>
+                        <li><a href="{{ url_for('logout') }}" class="btn btn-outline">{{ t.logout }}</a></li>
+                    {% else %}
+                        <li><a href="{{ url_for('login') }}" class="btn btn-outline">{{ t.login }}</a></li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container">
+        <!-- Отображение флэш-сообщений -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="flash-messages">
+                    {% for category, message in messages %}
+                        <div class="flash flash-{{ category }}">{{ message }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+        
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer>
+        <p>&copy; 2026 Bator Dugarov. Built with Python & Flask.</p>
+    </footer>
+</body>
+</html>

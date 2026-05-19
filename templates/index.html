@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="page-header">
+    {% if current_lens_name %}
+        <h2>{{ t.shot_on }} {{ current_lens_name }}</h2>
+    {% else %}
+        <h2>{{ t.portfolio }}</h2>
+    {% endif %}
+</div>
+
+{% if photos %}
+<div class="masonry-grid">
+    {% for photo in photos %}
+    <!-- Отдельный элемент сетки. break-inside: avoid предотвращает разрыв элемента между колонками -->
+    <div class="masonry-item">
+        <!-- Обертка в ссылку для активации псевдокласса :target (Лайтбокс) -->
+        <a href="#lightbox-{{ photo.id }}" class="photo-link">
+            <div class="photo-card">
+                <!-- Загрузка изображения из папки uploads. 
+                     Атрибут loading="lazy" (Ленивая загрузка) значительно снижает нагрузку на сервер 
+                     и ускоряет первичную загрузку страницы, так как картинки грузятся только при прокрутке. -->
+                <img src="{{ url_for('static', filename='uploads/' + photo.filename) }}" alt="{{ photo.title }}" loading="lazy">
+                
+                <!-- Оверлей с информацией, который появляется при наведении (hover) -->
+                <div class="photo-overlay">
+                    <div class="photo-info">
+                        <h3>{{ photo.title }}</h3>
+                        {% if photo.description %}
+                            <p>{{ photo.description }}</p>
+                        {% endif %}
+                        <span class="lens-tag">{{ photo.lens_name }}</span>
+                    </div>
+                </div>
+            </div>
+        </a>
+        
+        <!-- Кнопка удаления, видимая только администраторам -->
+        {% if session.get('logged_in') %}
+        <form action="{{ url_for('delete_photo', photo_id=photo.id) }}" method="POST" class="delete-form-inline">
+            <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('{{ t.delete_confirm }}');">{{ t.delete }}</button>
+        </form>
+        {% endif %}
+
+        <!-- Модальное окно Lightbox (оверлей) -->
+        <div id="lightbox-{{ photo.id }}" class="lightbox-overlay">
+            <a href="#_" class="lightbox-close">{{ t.close }}</a>
+            <div class="lightbox-content">
+                <img src="{{ url_for('static', filename='uploads/' + photo.filename) }}" alt="{{ photo.title }}">
+                <div class="lightbox-info-large">
+                    <h3>{{ photo.title }}</h3>
+                    {% if photo.description %}
+                        <p>{{ photo.description }}</p>
+                    {% endif %}
+                    <span class="lens-tag">{{ photo.lens_name }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="empty-state">
+    <p>{{ t.no_photos }} {% if session.get('logged_in') %}<a href="{{ url_for('upload') }}">{{ t.upload_now }}</a>{% endif %}</p>
+</div>
+{% endif %}
+{% endblock %}

@@ -16,7 +16,13 @@
     <div class="masonry-item">
         <!-- Обертка в ссылку для активации псевдокласса :target (Лайтбокс) -->
         <a href="#lightbox-{{ photo.id }}" class="photo-link">
-            <div class="photo-card">
+            <!--
+                Передаём доминирующий цвет как CSS-переменную --photo-color через inline-стиль.
+                Это позволяет использовать цвет конкретной фотографии в любых CSS-правилах
+                для данной карточки (box-shadow, border, gradient и т.д.) без JavaScript.
+                Дефолтное значение '#1a1c23' гарантирует корректный вид для старых записей.
+            -->
+            <div class="photo-card" style="--photo-color: {{ photo.dominant_color or '#1a1c23' }};">
                 <!-- Загрузка изображения из папки uploads. 
                      Атрибут loading="lazy" (Ленивая загрузка) значительно снижает нагрузку на сервер 
                      и ускоряет первичную загрузку страницы, так как картинки грузятся только при прокрутке. -->
@@ -35,16 +41,52 @@
             </div>
         </a>
         
-        <!-- Кнопка удаления, видимая только администраторам -->
+        <!-- Кнопки администратора: редактирование и удаление, видимы только администраторам -->
         {% if session.get('logged_in') %}
-        <form action="{{ url_for('delete_photo', photo_id=photo.id) }}" method="POST" class="delete-form-inline">
-            <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('{{ t.delete_confirm }}');">{{ t.delete }}</button>
-        </form>
+        <div class="admin-actions">
+            <!-- Кнопка редактирования: ведёт на страницу /edit/<id> -->
+            <a href="{{ url_for('edit_photo', photo_id=photo.id) }}" class="btn btn-edit btn-sm">{{ t.edit }}</a>
+            <!-- Кнопка удаления: POST-запрос через форму -->
+            <form action="{{ url_for('delete_photo', photo_id=photo.id) }}" method="POST" class="delete-form-inline">
+                <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('{{ t.delete_confirm }}');">{{ t.delete }}</button>
+            </form>
+        </div>
         {% endif %}
 
-        <!-- Модальное окно Lightbox (оверлей) -->
+        <!-- ======================================================= -->
+        <!-- Модальное окно Lightbox с циклической навигацией         -->
+        <!-- Псевдокласс :target активируется при переходе на #якорь  -->
+        <!-- ======================================================= -->
         <div id="lightbox-{{ photo.id }}" class="lightbox-overlay">
+
+            <!-- Кнопка закрытия — ведет на пустой якорь #_ -->
             <a href="#_" class="lightbox-close">{{ t.close }}</a>
+
+            <!-- --------------------------------------------------- -->
+            <!-- Стрелка "Назад" с циклической логикой на Jinja2:     -->
+            <!-- Если это первое фото (loop.first) — переходим на     -->
+            <!-- последнее фото в списке (photos[-1].id).             -->
+            <!-- Иначе — переходим на предыдущее по индексу.         -->
+            <!-- --------------------------------------------------- -->
+            {% if loop.first %}
+                <a href="#lightbox-{{ photos[-1].id }}" class="lightbox-arrow lightbox-arrow--prev" title="Предыдущее фото">&#8249;</a>
+            {% else %}
+                <a href="#lightbox-{{ photos[loop.index0 - 1].id }}" class="lightbox-arrow lightbox-arrow--prev" title="Предыдущее фото">&#8249;</a>
+            {% endif %}
+
+            <!-- --------------------------------------------------- -->
+            <!-- Стрелка "Вперед" с циклической логикой на Jinja2:   -->
+            <!-- Если это последнее фото (loop.last) — переходим на  -->
+            <!-- первое фото в списке (photos[0].id).                -->
+            <!-- Иначе — переходим на следующее по индексу.          -->
+            <!-- --------------------------------------------------- -->
+            {% if loop.last %}
+                <a href="#lightbox-{{ photos[0].id }}" class="lightbox-arrow lightbox-arrow--next" title="Следующее фото">&#8250;</a>
+            {% else %}
+                <a href="#lightbox-{{ photos[loop.index0 + 1].id }}" class="lightbox-arrow lightbox-arrow--next" title="Следующее фото">&#8250;</a>
+            {% endif %}
+
+            <!-- Основной контент лайтбокса: фото и подпись -->
             <div class="lightbox-content">
                 <img src="{{ url_for('static', filename='uploads/' + photo.filename) }}" alt="{{ photo.title }}">
                 <div class="lightbox-info-large">

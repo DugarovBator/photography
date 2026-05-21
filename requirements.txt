@@ -1,3 +1,7 @@
 Flask==3.0.3
 Werkzeug==3.0.3
 gunicorn==22.0.0
+# Pillow — библиотека для работы с изображениями, требуется для ColorThief
+Pillow==10.4.0
+# colorthief — алгоритм извлечения доминирующего цвета из изображений методом k-medians
+colorthief==0.2.1

@@ -4,8 +4,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bator Dugarov | Photography</title>
-    <!-- Использование системных шрифтов для производительности, с Inter в качестве современного запасного варианта -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+    <!-- ================================================================ -->
+    <!-- Премиальная пара шрифтов из Google Fonts:                        -->
+    <!--   • Playfair Display — элегантный шрифт с засечками для          -->
+    <!--     заголовков и логотипа бренда (весa 400, 500, 700)            -->
+    <!--   • Lato — чистый гуманистический гротеск для основного текста   -->
+    <!--     и кнопок (веса 300, 400, 700)                                -->
+    <!-- display=swap гарантирует, что текст виден до загрузки шрифтов   -->
+    <!-- ================================================================ -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
@@ -54,7 +65,7 @@
     </main>
 
     <footer>
-        <p>&copy; 2026 Bator Dugarov. Built with Python & Flask.</p>
+        <p>&copy; 2026 Bator Dugarov. Built with Python &amp; Flask.</p>
     </footer>
 </body>
 </html>

@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="form-container edit-form-container">
+
+    <!-- Превью редактируемой фотографии для контекста -->
+    <div class="edit-photo-preview">
+        <img src="{{ url_for('static', filename='uploads/' + photo.filename) }}" alt="{{ photo.title }}">
+        <!-- Цветовой акцент из доминирующего цвета фото -->
+        <div class="edit-color-badge" style="background-color: {{ photo.dominant_color or '#1a1c23' }};" title="Доминирующий цвет"></div>
+    </div>
+
+    <h2>{{ t.edit_photo }}</h2>
+
+    <!-- Форма редактирования: без enctype (файл не меняем), метод POST -->
+    <form method="POST" action="{{ url_for('edit_photo', photo_id=photo.id) }}" class="custom-form">
+
+        <div class="form-group">
+            <label for="title">{{ t.title }}</label>
+            <!-- value подставляет текущее название фото -->
+            <input type="text" id="title" name="title" required
+                   value="{{ photo.title }}"
+                   placeholder="{{ t.title_placeholder }}">
+        </div>
+
+        <div class="form-group">
+            <label for="description">{{ t.description }}</label>
+            <!-- Текущее описание подставляется между тегами textarea -->
+            <textarea id="description" name="description" rows="3"
+                      placeholder="{{ t.description_placeholder }}">{{ photo.description or '' }}</textarea>
+        </div>
+
+        <div class="form-group">
+            <label for="lens_id">{{ t.lens_used }}</label>
+            <select id="lens_id" name="lens_id" required>
+                {% for lens in lenses %}
+                    <!--
+                        selected добавляется к тому объективу, который уже привязан к фото.
+                        Сравниваем lens.id (int) с photo.lens_id (int) через Jinja2.
+                    -->
+                    <option value="{{ lens.id }}" {% if lens.id == photo.lens_id %}selected{% endif %}>
+                        {{ lens.name }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="edit-form-actions">
+            <a href="{{ url_for('index') }}" class="btn btn-outline">{{ t.cancel }}</a>
+            <button type="submit" class="btn btn-primary">{{ t.save_changes }}</button>
+        </div>
+
+    </form>
+</div>
+{% endblock %}

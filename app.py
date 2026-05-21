@@ -5,6 +5,9 @@ from flask import Flask, render_template, request, redirect, url_for, session, f
 from werkzeug.utils import secure_filename
 from werkzeug.security import check_password_hash
 
+# Импортируем ColorThief для алгоритмического извлечения доминирующего цвета
+from colorthief import ColorThief
+
 app = Flask(__name__)
 # Секретный ключ для подписи сессий
 app.secret_key = 'super_secret_key_change_in_production'
@@ -21,11 +24,33 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 DB_NAME = 'portfolio.db'
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
 
+# Дефолтный цвет, совпадающий с --surface-color интерфейса.
+# Используется при ошибке извлечения цвета (повреждённый файл, неподдерживаемый формат и т.д.)
+DEFAULT_DOMINANT_COLOR = '#1a1c23'
+
 def get_db_connection():
     """Устанавливает и возвращает подключение к базе данных SQLite."""
     conn = sqlite3.connect(DB_NAME)
     conn.row_factory = sqlite3.Row  # Позволяет обращаться к столбцам по имени (как к словарю)
     return conn
+
+def extract_dominant_color(file_path: str) -> str:
+    """
+    Извлекает доминирующий цвет изображения методом k-medians (ColorThief).
+    Возвращает HEX-строку вида '#rrggbb'.
+    При любой ошибке (неподдерживаемый формат, повреждённый файл) 
+    возвращает дефолтный цвет интерфейса.
+    """
+    try:
+        # quality=5: компромисс между скоростью анализа и точностью (1 = медленнее, точнее)
+        color_thief = ColorThief(file_path)
+        rgb = color_thief.get_color(quality=5)
+        # Конвертируем кортеж RGB -> HEX-строку, например (234, 179, 8) -> '#eab308'
+        return '#{:02x}{:02x}{:02x}'.format(rgb[0], rgb[1], rgb[2])
+    except Exception as e:
+        # Не прерываем загрузку при ошибке анализа цвета — просто используем дефолт
+        app.logger.warning(f"[ColorThief] Не удалось извлечь цвет из '{file_path}': {e}")
+        return DEFAULT_DOMINANT_COLOR
 
 TRANSLATIONS = {
     'en': {
@@ -54,6 +79,11 @@ TRANSLATIONS = {
         'upload_btn': 'Upload Photo',
         'brand': 'Bator Dugarov | Photography',
         'close': 'Close',
+        # Редактирование фото
+        'edit_photo': 'Edit Photo',
+        'save_changes': 'Save Changes',
+        'cancel': 'Cancel',
+        'edit': 'Edit',
         # Flash messages
         'flash_logged_in': 'Successfully logged in!',
         'flash_invalid_login': 'Invalid username or password.',
@@ -65,6 +95,7 @@ TRANSLATIONS = {
         'flash_invalid_file': 'Invalid file type. Allowed: png, jpg, jpeg, gif, webp.',
         'flash_delete_success': 'Photo deleted successfully.',
         'flash_photo_not_found': 'Photo not found.',
+        'flash_edit_success': 'Photo updated successfully.',
     },
     'ru': {
         'all_photos': 'Все фото',
@@ -92,6 +123,11 @@ TRANSLATIONS = {
         'upload_btn': 'Загрузить фото',
         'brand': 'Батор Дугаров | Фотография',
         'close': 'Закрыть',
+        # Редактирование фото
+        'edit_photo': 'Редактировать фото',
+        'save_changes': 'Сохранить',
+        'cancel': 'Отмена',
+        'edit': 'Изменить',
         # Флэш-сообщения
         'flash_logged_in': 'Успешный вход!',
         'flash_invalid_login': 'Неверное имя пользователя или пароль.',
@@ -103,6 +139,7 @@ TRANSLATIONS = {
         'flash_invalid_file': 'Неверный тип файла. Разрешены: png, jpg, jpeg, gif, webp.',
         'flash_delete_success': 'Фото успешно удалено.',
         'flash_photo_not_found': 'Фото не найдено.',
+        'flash_edit_success': 'Фото успешно обновлено.',
     }
 }
 
@@ -222,16 +259,27 @@ def upload():
             
             # Сохранение файла на диск
             file.save(file_path)
+
+            # ----------------------------------------------------------------
+            # Извлечение доминирующего цвета с помощью ColorThief.
+            # Выполняется ПОСЛЕ сохранения файла, чтобы анализировать реальный
+            # файл на диске, а не поток данных. Ошибки обрабатываются внутри
+            # функции extract_dominant_color — загрузка не прервётся при сбое.
+            # ----------------------------------------------------------------
+            dominant_color = extract_dominant_color(file_path)
+            app.logger.info(f"[ColorThief] '{unique_filename}' -> доминирующий цвет: {dominant_color}")
             
             # Извлечение данных из формы
             title = request.form['title']
             description = request.form.get('description', '')
             lens_id = request.form['lens_id']
             
-            # Сохранение записи в базу данных
+            # Сохранение записи в базу данных с новым полем dominant_color
             conn = get_db_connection()
-            conn.execute('INSERT INTO photos (title, filename, description, lens_id) VALUES (?, ?, ?, ?)',
-                         (title, unique_filename, description, lens_id))
+            conn.execute(
+                'INSERT INTO photos (title, filename, description, lens_id, dominant_color) VALUES (?, ?, ?, ?, ?)',
+                (title, unique_filename, description, lens_id, dominant_color)
+            )
             conn.commit()
             conn.close()
             
@@ -245,6 +293,44 @@ def upload():
     lenses = conn.execute('SELECT * FROM lenses ORDER BY name ASC').fetchall()
     conn.close()
     return render_template('upload.html', lenses=lenses)
+
+@app.route('/edit/<int:photo_id>', methods=['GET', 'POST'])
+def edit_photo(photo_id):
+    """Маршрут редактирования фото (защищен). GET — форма, POST — сохранение."""
+    if not session.get('logged_in'):
+        abort(403)
+
+    lang = session.get('lang', 'ru')
+    conn = get_db_connection()
+    photo = conn.execute('SELECT * FROM photos WHERE id = ?', (photo_id,)).fetchone()
+
+    if not photo:
+        conn.close()
+        flash(TRANSLATIONS[lang]['flash_photo_not_found'], 'error')
+        return redirect(url_for('index'))
+
+    if request.method == 'POST':
+        # Получаем обновлённые данные из формы
+        new_title = request.form['title'].strip()
+        new_description = request.form.get('description', '').strip()
+        new_lens_id = request.form['lens_id']
+
+        # Обновляем запись в базе данных
+        conn.execute(
+            'UPDATE photos SET title = ?, description = ?, lens_id = ? WHERE id = ?',
+            (new_title, new_description, new_lens_id, photo_id)
+        )
+        conn.commit()
+        conn.close()
+
+        flash(TRANSLATIONS[lang]['flash_edit_success'], 'success')
+        return redirect(url_for('index'))
+
+    # GET: передаём фото и список объективов в шаблон редактирования
+    lenses = conn.execute('SELECT * FROM lenses ORDER BY name ASC').fetchall()
+    conn.close()
+    return render_template('edit.html', photo=photo, lenses=lenses)
+
 
 @app.route('/delete/<int:photo_id>', methods=['POST'])
 def delete_photo(photo_id):

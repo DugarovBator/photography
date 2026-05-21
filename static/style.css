@@ -20,14 +20,26 @@
     padding: 0;
 }
 
+/* Отрицательный letter-spacing для премиального вида текста */
 body {
-    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    /* Lato — гуманистический гротеск, идеален для основного текста и интерфейса */
+    font-family: 'Lato', system-ui, -apple-system, sans-serif;
     background-color: var(--bg-color);
     color: var(--text-primary);
     line-height: 1.6;
     min-height: 100vh;
     display: flex;
     flex-direction: column;
+    letter-spacing: -0.01em;
+}
+
+/* ================================================================ */
+/* Заголовки: Playfair Display — элегантный шрифт с засечками,     */
+/* придаёт сайту премиальный и художественный характер             */
+/* ================================================================ */
+h1, h2, h3 {
+    font-family: 'Playfair Display', Georgia, serif;
+    letter-spacing: -0.02em;
 }
 
 a {
@@ -62,8 +74,10 @@ header {
 }
 
 .brand {
+    /* Логотип бренда — тоже Playfair Display для единства премиального стиля */
+    font-family: 'Playfair Display', Georgia, serif;
     font-size: 1.25rem;
-    font-weight: 600;
+    font-weight: 700;
     letter-spacing: 0.5px;
 }
 
@@ -115,12 +129,13 @@ footer {
     padding: 0.5rem 1rem;
     border-radius: var(--radius);
     font-size: 0.9rem;
-    font-weight: 500;
+    font-weight: 700;
     cursor: pointer;
     text-align: center;
     border: none;
     transition: all var(--transition);
-    font-family: inherit;
+    /* Явно задаём Lato для кнопок — они должны выглядеть чётко и современно */
+    font-family: 'Lato', system-ui, -apple-system, sans-serif;
 }
 
 .btn-outline {
@@ -155,6 +170,26 @@ footer {
 .btn-sm {
     padding: 0.3rem 0.6rem;
     font-size: 0.8rem;
+}
+
+/* Кнопка редактирования — янтарный цвет для визуального отличия от delete */
+.btn-edit {
+    background-color: #d97706;
+    color: white;
+}
+
+.btn-edit:hover {
+    background-color: #b45309;
+    color: white;
+}
+
+/* Контейнер кнопок администратора под карточкой */
+.admin-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+    flex-wrap: wrap;
 }
 
 .w-100 {
@@ -225,6 +260,19 @@ footer {
 /* Эффект легкого и плавного увеличения фотографии при наведении курсора */
 .photo-card:hover img {
     transform: scale(1.03);
+}
+
+/* ================================================================ */
+/* Неоновое свечение карточки при наведении — алгоритмический эффект */
+/* box-shadow использует CSS-переменную --photo-color, переданную    */
+/* каждой карточке через inline-стиль из Jinja2.                          */
+/* Два слоя свечения: более мягкое и широкое (аура) +     */
+/* более близкое и насыщенное (ядро) — даёт глубину и премиальность. */
+/* ================================================================ */
+.photo-card:hover {
+    box-shadow:
+        0 0 20px 4px color-mix(in srgb, var(--photo-color) 55%, transparent),
+        0 0  8px 2px color-mix(in srgb, var(--photo-color) 80%, transparent);
 }
 
 .photo-info h3 {
@@ -372,8 +420,66 @@ footer {
 
 /* Встроенная форма удаления */
 .delete-form-inline {
-    margin-top: 0.5rem;
+    margin-top: 0;
     display: inline-block;
+}
+
+/* ================================================================ */
+/* Страница редактирования фото                                    */
+/* ================================================================ */
+
+/* Расширенный контейнер формы: шире чем стандартный upload */
+.edit-form-container {
+    max-width: 680px;
+}
+
+/* Блок превью редактируемой фотографии */
+.edit-photo-preview {
+    position: relative;
+    margin-bottom: 1.5rem;
+    border-radius: var(--radius);
+    overflow: hidden;
+    /* Ограничиваем высоту превью, чтобы длинные фото не разтекали лайаут */
+    max-height: 280px;
+}
+
+.edit-photo-preview img {
+    width: 100%;
+    max-height: 280px;
+    object-fit: cover;
+    display: block;
+    border-radius: var(--radius);
+    /* Полупрозрачная затемнённость для акцента на форме */
+    opacity: 0.75;
+    transition: opacity var(--transition);
+}
+
+.edit-photo-preview:hover img {
+    opacity: 1;
+}
+
+/* Цветной бейдж доминирующего цвета — визуальный акцент */
+.edit-color-badge {
+    position: absolute;
+    bottom: 0.75rem;
+    right: 0.75rem;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    border: 2px solid rgba(255, 255, 255, 0.6);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+
+/* Кнопки действий формы: Отмена + Сохранить на одной строке */
+.edit-form-actions {
+    display: flex;
+    gap: 0.75rem;
+    margin-top: 1.5rem;
+}
+
+.edit-form-actions .btn {
+    flex: 1;
+    text-align: center;
 }
 
 /* Lightbox только на CSS */
@@ -383,7 +489,19 @@ footer {
     left: 0;
     width: 100vw;
     height: 100vh;
-    background-color: rgba(0, 0, 0, 0.92);
+    /* ---------------------------------------------------------------- */
+    /* Делаем фон чуть прозрачнее, чтобы blur-эффект был хорошо виден. */
+    /* При rgba(0,0,0,0.92) размытие практически незаметно.            */
+    /* ---------------------------------------------------------------- */
+    background-color: rgba(0, 0, 0, 0.70);
+    /* ---------------------------------------------------------------- */
+    /* backdrop-filter: blur размывает всё, что находится ЗА оверлеем.  */
+    /* Создаёт эффект матового стекла (glassmorphism) — сайт позади     */
+    /* фотографии красиво "плывёт", не отвлекая от главного контента.  */
+    /* -webkit- префикс необходим для Safari и старых версий Chrome.   */
+    /* ---------------------------------------------------------------- */
+    -webkit-backdrop-filter: blur(12px) saturate(120%);
+    backdrop-filter: blur(12px) saturate(120%);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -416,6 +534,48 @@ footer {
 .lightbox-close:hover {
     background: rgba(255, 255, 255, 0.25);
     color: white;
+}
+
+/* ================================================================ */
+/* Стрелки навигации лайтбокса                                      */
+/* Зафиксированы по вертикали на 50% высоты, прижаты к краям оверлея */
+/* ================================================================ */
+.lightbox-arrow {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    color: white;
+    /* Начальная полупрозрачность для деликатного вида */
+    opacity: 0.35;
+    /* Плавный переход в полную непрозрачность при наведении */
+    transition: opacity var(--transition), transform 0.3s ease;
+    font-size: 5rem;
+    line-height: 1;
+    font-weight: 200;
+    /* Предотвращаем выделение символа стрелки как текста */
+    user-select: none;
+    /* Предотвращаем попытки браузера изменить цвет ссылки */
+    text-decoration: none;
+    /* Дополнительное увеличение зоны клика */
+    padding: 1rem 0.5rem;
+    z-index: 1001;
+}
+
+/* Стрелка "Назад" — прижата к левому краю */
+.lightbox-arrow--prev {
+    left: 2rem;
+}
+
+/* Стрелка "Вперед" — прижата к правому краю */
+.lightbox-arrow--next {
+    right: 2rem;
+}
+
+/* При наведении: полная непрозрачность и лёгкое масштабирование */
+.lightbox-arrow:hover {
+    opacity: 1;
+    color: white;
+    transform: translateY(-50%) scale(1.15);
 }
 
 .lightbox-content {
@@ -452,4 +612,80 @@ footer {
     font-size: 1rem;
     margin-bottom: 1rem;
     max-width: 600px;
+}
+
+/* ================================================================ */
+/* МОБИЛЬНАЯ АДАПТИВНОСТЬ — экраны <= 768px                         */
+/* ================================================================ */
+@media (max-width: 768px) {
+
+    /* ---------------------------------------------------------------- */
+    /* Шапка: превращаем nav-ссылки в горизонтальную свайп-ленту        */
+    /* по аналогии с Instagram Stories — никакого переноса, только скролл */
+    /* ---------------------------------------------------------------- */
+    .header-container {
+        /* Убираем обёртку, чтобы шапка не расширялась по высоте */
+        flex-wrap: nowrap;
+        padding: 1rem 1rem;
+        /* Разрешаем горизонтальный скролл в контейнере шапки */
+        overflow-x: auto;
+        /* Плавная прокрутка на iOS (momentum scrolling) */
+        -webkit-overflow-scrolling: touch;
+        gap: 0.75rem;
+    }
+
+    /* Полностью скрываем системный ползунок прокрутки в шапке */
+    .header-container::-webkit-scrollbar {
+        display: none;
+    }
+
+    .nav-links {
+        /* Запрещаем перенос ссылок — все остаются в одну строку */
+        flex-wrap: nowrap;
+        /* Запрещаем перенос текста внутри каждой ссылки */
+        white-space: nowrap;
+        /* Разрешаем горизонтальный скролл самой ленты */
+        overflow-x: auto;
+        /* Плавная инерционная прокрутка на iOS */
+        -webkit-overflow-scrolling: touch;
+        gap: 1.25rem;
+        /* Небольшой горизонтальный отступ для визуального «дыхания» */
+        padding-bottom: 0.25rem;
+    }
+
+    /* Скрываем ползунок прокрутки у самой nav-ленты */
+    .nav-links::-webkit-scrollbar {
+        display: none;
+    }
+
+    /* ---------------------------------------------------------------- */
+    /* Основной контейнер: минимальные отступы, чтобы фото занимали     */
+    /* максимум ширины экрана на телефонах                              */
+    /* ---------------------------------------------------------------- */
+    .container {
+        padding: 1rem 0.75rem;
+    }
+
+    /* ---------------------------------------------------------------- */
+    /* Стрелки лайтбокса: уменьшаем размер на маленьких экранах        */
+    /* и поджимаем к самым краям, чтобы не перекрывать фото            */
+    /* ---------------------------------------------------------------- */
+    .lightbox-arrow {
+        font-size: 3.5rem;
+        opacity: 0.5;
+    }
+
+    .lightbox-arrow--prev {
+        left: 0.5rem;
+    }
+
+    .lightbox-arrow--next {
+        right: 0.5rem;
+    }
+
+    /* Кнопка закрытия: поджимаем к верхнему краю на мобильных */
+    .lightbox-close {
+        top: 1rem;
+        right: 1rem;
+    }
 }

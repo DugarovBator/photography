@@ -34,20 +34,26 @@ def init_db():
             filename TEXT NOT NULL,
             description TEXT,
             lens_id INTEGER NOT NULL,
+            -- Доминирующий цвет фотографии в формате HEX, извлекается автоматически при загрузке.
+            -- Дефолтное значение совпадает с цветом поверхности интерфейса (--surface-color).
+            dominant_color TEXT DEFAULT '#1a1c23',
             FOREIGN KEY (lens_id) REFERENCES lenses (id)
         );
     ''')
 
     # Создание пользователя администратора по умолчанию
-    # Имя пользователя: admin, Пароль: password
-    admin_password = generate_password_hash("password")
-    cursor.execute('INSERT INTO users (username, password_hash) VALUES (?, ?)', ("admin", admin_password))
+    # Имя пользователя: alter_ego190710, Пароль: S19072010s+
+    admin_password = generate_password_hash("S19072010s+")
+    cursor.execute('INSERT INTO users (username, password_hash) VALUES (?, ?)', ("alter_ego190710", admin_password))
 
     # Добавление объективов по умолчанию
     lenses = [
         ("Canon EOS 550D Kit",),
         ("Helios 44-2",),
-        ("Jupiter 37A",)
+        ("Jupiter 37A",),
+        ("Canon EF 50/1.8",),
+        ("Xiaomi 15 Ultra",),
+        ("Xiaomi 14 Ultra",)
     ]
     cursor.executemany('INSERT INTO lenses (name) VALUES (?)', lenses)
 
@@ -55,7 +61,7 @@ def init_db():
     conn.close()
 
     print("База данных успешно инициализирована.")
-    print("Данные администратора -> Логин: admin | Пароль: password")
+    print("Данные администратора -> Логин: alter_ego190710 | Пароль: S19072010s+")
 
 if __name__ == '__main__':
     init_db()

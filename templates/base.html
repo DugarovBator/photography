@@ -41,8 +41,8 @@
                     <!-- Кнопка входа скрыта намеренно: доступ через /admin напрямую -->
                     {% if session.get('logged_in') %}
                         <li><a href="{{ url_for('upload') }}" class="btn btn-outline">{{ t.upload }}</a></li>
-                        <!-- url_for('admin') — скрытый маршрут авторизации -->
-                        <li><a href="{{ url_for('admin') }}" class="btn btn-outline">{{ t.logout }}</a></li>
+                        <!-- url_for('logout') — маршрут выхода из системы -->
+                        <li><a href="{{ url_for('logout') }}" class="btn btn-outline">{{ t.logout }}</a></li>
                     {% endif %}
                 </ul>
             </nav>

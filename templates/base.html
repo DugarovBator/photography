@@ -38,11 +38,11 @@
                     </li>
                     
                     <!-- Панель управления администратора -->
+                    <!-- Кнопка входа скрыта намеренно: доступ через /admin напрямую -->
                     {% if session.get('logged_in') %}
                         <li><a href="{{ url_for('upload') }}" class="btn btn-outline">{{ t.upload }}</a></li>
-                        <li><a href="{{ url_for('logout') }}" class="btn btn-outline">{{ t.logout }}</a></li>
-                    {% else %}
-                        <li><a href="{{ url_for('login') }}" class="btn btn-outline">{{ t.login }}</a></li>
+                        <!-- url_for('admin') — скрытый маршрут авторизации -->
+                        <li><a href="{{ url_for('admin') }}" class="btn btn-outline">{{ t.logout }}</a></li>
                     {% endif %}
                 </ul>
             </nav>
@@ -65,7 +65,8 @@
     </main>
 
     <footer>
-        <p>&copy; 2026 Bator Dugarov. Built with Python &amp; Flask.</p>
+        <!-- Лаконичный копирайт без упоминания технологического стека -->
+        <p>&copy; 2026 Bator Dugarov.</p>
     </footer>
 </body>
 </html>

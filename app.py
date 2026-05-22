@@ -200,9 +200,11 @@ def filter_by_lens(lens_id):
     
     return render_template('index.html', photos=photos, current_lens_id=lens_id, current_lens_name=lens['name'])
 
-@app.route('/login', methods=['GET', 'POST'])
-def login():
-    """Маршрут авторизации администратора."""
+# Маршрут скрыт: адрес изменён с /login на /admin,
+# чтобы панель входа не была доступна через предсказуемый URL.
+@app.route('/admin', methods=['GET', 'POST'])
+def admin():
+    """Скрытый маршрут авторизации администратора (доступен только по прямому URL /admin)."""
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
@@ -239,7 +241,8 @@ def upload():
     # Защита маршрута с помощью сессии
     if not session.get('logged_in'):
         flash(TRANSLATIONS[lang]['flash_must_login'], 'error')
-        return redirect(url_for('login'))
+        # Перенаправляем на скрытый маршрут авторизации
+        return redirect(url_for('admin'))
 
     if request.method == 'POST':
         if 'photo' not in request.files:

@@ -3,7 +3,7 @@
 {% block content %}
 <div class="form-container">
     <h2>{{ t.admin_login }}</h2>
-    <form method="POST" action="{{ url_for('login') }}" class="custom-form">
+    <form method="POST" action="{{ url_for('admin') }}" class="custom-form">
         <div class="form-group">
             <label for="username">{{ t.username }}</label>
             <input type="text" id="username" name="username" required>
